@@ -33,86 +33,6 @@ type Device struct {
 	Storage    storage.Storage
 }
 
-// Builder 设备构造器
-type Builder struct {
-	ProductKey string
-	Name       string
-	Version    string
-	Protocol   protocol.Protocol
-	Serializer serializer.Serializer
-	Topics     topics.Topics
-	Storage    storage.Storage
-}
-
-// NewBuilder 创建设备构造器
-func NewBuilder() *Builder {
-	DefaultProtocol := protocol.NewMQTT()
-	DefaultSerializer := serializer.NewTLV()
-	DefaultTopics := topics.DefaultTopics
-	DefaultStorage := &storage.LocalStorage{}
-	return &Builder{
-		Protocol:   DefaultProtocol,
-		Serializer: DefaultSerializer,
-		Topics:     DefaultTopics,
-		Storage:    DefaultStorage,
-	}
-}
-
-// SetProductKey 设置产品Key
-func (d *Builder) SetProductKey(productKey string) *Builder {
-	d.ProductKey = productKey
-	return d
-}
-
-// SetDeviceName 设置设备名
-func (d *Builder) SetDeviceName(name string) *Builder {
-	d.Name = name
-	return d
-}
-
-// SetVersion 设置版本
-func (d *Builder) SetVersion(version string) *Builder {
-	d.Version = version
-	return d
-}
-
-// SetProtocol 设置协议
-func (d *Builder) SetProtocol(protocol protocol.Protocol) *Builder {
-	d.Protocol = protocol
-	return d
-}
-
-// SetSerializer 设置序列化器
-func (d *Builder) SetSerializer(serializer serializer.Serializer) *Builder {
-	d.Serializer = serializer
-	return d
-}
-
-// SetTopics 设置主题列表
-func (d *Builder) SetTopics(topics topics.Topics) *Builder {
-	d.Topics = topics
-	return d
-}
-
-// SetStorage 设置存储
-func (d *Builder) SetStorage(storage storage.Storage) *Builder {
-	d.Storage = storage
-	return d
-}
-
-// Build 构建设备
-func (d *Builder) Build() *Device {
-	return &Device{
-		ProductKey: d.ProductKey,
-		Name:       d.Name,
-		Version:    d.Version,
-		Protocol:   d.Protocol,
-		Serializer: d.Serializer,
-		Topics:     d.Topics,
-		Storage:    d.Storage,
-	}
-}
-
 // GetDeviceInfo 获取设备信息
 func (d *Device) GetDeviceInfo() (*Device, error) {
 	ProductKeyInter, err := d.Storage.Get("ProductKey")
@@ -294,54 +214,88 @@ func (d *Device) InitProtocolClient(opts ...interface{}) error {
 
 // Publish 发布
 func (d *Device) Publish(request request.Request) error {
-	params := protocol.ParamsFormatter(request)
+	params := protocol.OptionsFormatter(request)
 	return d.Protocol.Publish(params)
 }
 
 // Subscribe 订阅
-func (d *Device) Subscribe(request request.Request) {
-	params := protocol.ParamsFormatter(request)
-	d.Protocol.Subscribe(params)
+func (d *Device) Subscribe(request request.Request) error {
+	opts := protocol.OptionsFormatter(request)
+	return d.Protocol.Subscribe(opts)
 }
 
 // Unsubscribe 取消订阅
-func (d *Device) Unsubscribe(topics []string) {
-	d.Protocol.Unsubscribe(map[string]interface{}{"topics": topics})
+func (d *Device) Unsubscribe(topics []string) error {
+	return d.Protocol.Unsubscribe(map[string]interface{}{"topics": topics})
 }
 
-// PostProperty 发送属性
-func (d *Device) PostProperty(property []interface{}) error {
-	request := request.Request{}
-	request.Topic = d.Topics.PostProperty
-	request.Qos = 1
-	request.Retained = false
-	payload, err := d.Serializer.Marshal(property, serializer.PostProperty)
+// toSerializerProperty device.Property 转换到 serializer.Property
+func (p *Property) toSerializerProperty() *serializer.Property {
+	sp := &serializer.Property{}
+	sp.PropertyID = p.PropertyID
+	sp.SubDeviceID = p.SubDeviceID
+	sp.Value = p.Value
+	return sp
+}
+
+// PostProperty 上报属性
+func (d *Device) PostProperty(property Property) error {
+	data, err := d.Serializer.MakePostPropertyData(property.toSerializerProperty())
 	if err != nil {
 		return err
 	}
+	request := protocol.OptionsFormatter(*makePostPropertyRequest(d, data))
+	if err != nil {
+		return err
+	}
+	return d.Protocol.Publish(request)
+}
+
+// makePostPropertyRequest 创建属性请求
+func makePostPropertyRequest(d *Device, payload []byte) *request.Request {
+	request := &request.Request{}
+	request.Topic = d.Topics.PostProperty
+	request.Qos = 1
+	request.Retained = false
 	request.Payload = payload
-	params := protocol.ParamsFormatter(request)
-	return d.Protocol.Publish(params)
+	return request
 }
 
 // InitOptions 初始化配置项
 type InitOptions struct {
-	AutoReregister           bool
-	AutoRelogin              bool
-	AutoReInitProtocolClient bool
+	AutoReregister               bool
+	AutoRelogin                  bool
+	AutoReInitProtocolClient     bool
+	ReregisterInterval           time.Duration
+	ReloginInterval              time.Duration
+	ReInitProtocolClientInterval time.Duration
 }
 
-// AutoPostProperty 自动发送属性
-func (d *Device) AutoPostProperty(property []interface{}, opts ...InitOptions) error {
-	finallyOpts := InitOptions{}
+var defaultInitOptions = InitOptions{
+	AutoReregister:               false,
+	AutoRelogin:                  false,
+	AutoReInitProtocolClient:     false,
+	ReregisterInterval:           5 * time.Second,
+	ReloginInterval:              5 * time.Second,
+	ReInitProtocolClientInterval: 5 * time.Second,
+}
+
+func getFinallyInitOpts(opts ...InitOptions) InitOptions {
+	finallyOpts := defaultInitOptions
 	if len(opts) > 0 {
 		finallyOpts = opts[0]
 	}
+	return finallyOpts
+}
+
+// AutoInit 自动初始化
+func (d *Device) AutoInit(opts ...InitOptions) error {
+	finallyOpts := getFinallyInitOpts(opts...)
 	if types.IsNil(d.Protocol.GetInstance()) {
 		if err := d.AutoLogin(); err != nil {
 			if finallyOpts.AutoRelogin {
 				for {
-					time.Sleep(5 * time.Second)
+					time.Sleep(finallyOpts.ReregisterInterval)
 					if err := d.AutoLogin(); err == nil {
 						break
 					}
@@ -353,7 +307,7 @@ func (d *Device) AutoPostProperty(property []interface{}, opts ...InitOptions) e
 		if err := d.InitProtocolClient(); err != nil {
 			if finallyOpts.AutoReInitProtocolClient {
 				for {
-					time.Sleep(5 * time.Second)
+					time.Sleep(finallyOpts.ReInitProtocolClientInterval)
 					if err := d.InitProtocolClient(); err == nil {
 						break
 					}
@@ -362,6 +316,15 @@ func (d *Device) AutoPostProperty(property []interface{}, opts ...InitOptions) e
 				return err
 			}
 		}
+	}
+	return nil
+}
+
+// AutoPostProperty 自动上报属性
+func (d *Device) AutoPostProperty(property Property, opts ...InitOptions) error {
+	finallyOpts := getFinallyInitOpts(opts...)
+	if types.IsNil(d.Protocol.GetInstance()) {
+		d.AutoInit(finallyOpts)
 	}
 	return d.PostProperty(property)
 }
@@ -372,21 +335,48 @@ func (d *Device) OnProperty(callback func(property interface{})) {
 }
 
 // PostEvent 发送事件
-func (d *Device) PostEvent(eventIdentifier string, property []interface{}) error {
+func (d *Device) PostEvent(identifier string, property []interface{}) error {
 	request := request.Request{}
 	request.Topic = d.Topics.PostEvent
 	request.Qos = 1
-	payload, err := d.Serializer.Marshal(property, serializer.PostEvent)
+	payload, err := d.Serializer.Marshal(property)
 	request.Payload = payload
 	if err != nil {
 		return err
 	}
-	params := protocol.ParamsFormatter(request)
+	params := protocol.OptionsFormatter(request)
 	d.Protocol.Publish(params)
 	return nil
 }
 
-// OnCommand 响应命令
-func (d *Device) OnCommand(func(res interface{}, replyFn func(res interface{}))) {
+// Command 命令
+type Command struct {
+	ID       uint16
+	Callback func(map[int]interface{})
+}
 
+// OnCommand 响应命令
+func (d *Device) OnCommand(cmds ...Command) error {
+	callbacks := make(map[uint16]func(map[int]interface{}))
+	for _, cmd := range cmds {
+		callbacks[cmd.ID] = cmd.Callback
+	}
+	callbackFn := func(resp request.Response) {
+		p := resp.Payload()
+		cmdPayload, _ := d.Serializer.UnmarshalCommand(p)
+		params := cmdPayload.Params
+		params[-1] = cmdPayload.SubDeviceID
+		if callback, ok := callbacks[cmdPayload.ID]; ok {
+			callback(params)
+		}
+	}
+	return d.Protocol.Subscribe(protocol.OptionsFormatter(*makeOnCommandRequest(d, callbackFn)))
+}
+
+func makeOnCommandRequest(d *Device, callbackFn func(resp request.Response)) *request.Request {
+	r := &request.Request{}
+	r.Topic = d.Topics.OnCommand
+	r.Qos = 1
+	r.Callback = callbackFn
+	return r
 }

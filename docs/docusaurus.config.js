@@ -1,6 +1,6 @@
 module.exports = {
   title: 'IOT Hub',
-  tagline: 'The tagline of iot hub',
+  tagline: '万物互联，开启互联网4.0时代',
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
@@ -17,12 +17,12 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/',
+          to: 'docs/sdk/env-and-config',
           activeBasePath: 'docs',
-          label: 'Docs',
+          label: '文档',
           position: 'left',
         },
-        {to: 'blog', label: 'Blog', position: 'left'},
+        { to: 'blog', label: '博客', position: 'left' },
         {
           href: 'https://github.com/facebook/docusaurus',
           label: 'GitHub',
@@ -37,12 +37,8 @@ module.exports = {
           title: 'Docs',
           items: [
             {
-              label: '环境要求和配置',
-              to: 'docs/env-and-config/',
-            },
-            {
-              label: '安全认证和连接',
-              to: 'docs/auth-and-conn/',
+              label: 'SDK',
+              to: 'docs/sdk/env-and-config/',
             },
           ],
         },

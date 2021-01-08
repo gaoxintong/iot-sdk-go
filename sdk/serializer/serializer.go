@@ -2,17 +2,22 @@ package serializer
 
 // Serializer 序列化
 type Serializer interface {
-	Marshal(data []interface{}, t Type) ([]byte, error)
-	Unmarshal(data []byte, t Type) (interface{}, error)
+	Marshal(data interface{}) (interface{}, error)
+	Unmarshal(data interface{}) (interface{}, error)
+	MakePostPropertyData(data *Property) ([]byte, error)
+	UnmarshalCommand(data []byte) (*Command, error)
 }
 
-// Type 数据交互类型
-type Type int
+// Property 属性
+type Property struct {
+	SubDeviceID uint16
+	PropertyID  uint16
+	Value       []interface{}
+}
 
-// 数据交互类型
-const (
-	PostProperty = iota
-	OnProperty
-	PostEvent
-	OnCommand
-)
+// Command 命令
+type Command struct {
+	ID          uint16
+	SubDeviceID uint16
+	Params      map[int]interface{}
+}

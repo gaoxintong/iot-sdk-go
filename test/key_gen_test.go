@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -10,7 +11,7 @@ func TestKeyGen(t *testing.T) {
 		t.Error("should return error when key length is invalid")
 	}
 	testid := int64(1)
-	generator, err = NewKeyGenerator("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+	generator, err = NewKeyGenerator("123456789066666688888888")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,4 +38,28 @@ func TestKeyGen(t *testing.T) {
 		t.Errorf("decode id from random key should return error for bad key : %s", "1111111111111111111111111111111111111111")
 	}
 
+}
+
+func TestGenRandomKey(t *testing.T) {
+	generator, err := NewKeyGenerator("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+	if err != nil {
+		fmt.Println("err1:", err)
+	}
+	key, err := generator.GenRandomKey(1)
+	if err != nil {
+		fmt.Println("err2:", err)
+	}
+	fmt.Println("key:", key)
+}
+
+func TestLog(t *testing.T) {
+	generator, err := NewKeyGenerator("ABCDEFGHIJKLMNOPABCDEFGHIJKLMNOP")
+	if err != nil {
+		fmt.Println("err1:", err)
+	}
+	key, err := generator.DecodeIDFromRandomKey("a862360cf3c8919b3425961b88c86835d6d4db1fbef5f0317c8726fe8e6b62c9")
+	if err != nil {
+		fmt.Println("err2:", err)
+	}
+	fmt.Println("key:", key)
 }

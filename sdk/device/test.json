@@ -1,0 +1,46 @@
+{
+  "objects": [
+    {
+      "no": 1,
+      "label": "status",
+      "part": 1,
+      "status": [
+        {
+          "value_type": 8,
+          "name": "brightness"
+        },
+        {
+          "value_type": 8,
+          "name": "status"
+        }
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "no": 1,
+      "name": "adjustBrightness",
+      "part": 1,
+      "priority": 0,
+      "params": [
+        {
+          "value_type": 7,
+          "name": "brightness"
+        }
+      ]
+    },
+    {
+      "no": 2,
+      "name": "switch",
+      "part": 1,
+      "priority": 0,
+      "params": [
+        {
+          "value_type": 7,
+          "name": "status"
+        }
+      ]
+    }
+  ],
+  "events": []
+}

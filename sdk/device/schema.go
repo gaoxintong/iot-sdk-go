@@ -2,6 +2,7 @@ package device
 
 import (
 	"errors"
+	serializer "iot-sdk-go/sdk/serializer"
 )
 
 // RegisterArgs 设备注册参数
@@ -86,3 +87,6 @@ type AuthData struct {
 	AccessToken string `json:"access_token"`
 	AccessAddr  string `json:"access_addr"`
 }
+
+// Property 属性
+type Property serializer.Property

@@ -1,6 +1,5 @@
 module.exports = {
   someSidebar: {
-    文档: ['env-and-config', 'auth-and-conn'],
-    Features: ['mdx'],
+    '边缘网关 SDK': ['sdk/env-and-config', 'sdk/auth-and-conn', 'sdk/communication-based-on-mqtt', 'sdk/TSL-develop'],
   },
 };

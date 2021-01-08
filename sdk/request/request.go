@@ -6,5 +6,5 @@ type Request struct {
 	Qos      byte
 	Retained bool
 	Payload  interface{}
-	Callback func(err error)
+	Callback func(Response)
 }

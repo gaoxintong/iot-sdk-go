@@ -1,6 +1,7 @@
 package serializer
 
 import (
+	"errors"
 	"iot-sdk-go/pkg/tlv"
 	"iot-sdk-go/pkg/types"
 	"time"
@@ -14,25 +15,55 @@ type TLV struct {
 }
 
 // NewTLV 创建TLV对象
-func NewTLV() TLV {
-	return TLV{}
-}
-
-// Unmarshal 反序列化
-func (s TLV) Unmarshal(data []byte, t Type) (interface{}, error) {
-	m := map[Type]func([]byte) (interface{}, error){
-		OnCommand: UnmarshalCommand,
-	}
-	return m[t](data)
+func NewTLV() *TLV {
+	return &TLV{}
 }
 
 // Marshal 序列化
-func (s TLV) Marshal(data []interface{}, t Type) ([]byte, error) {
-	m := map[Type]func(data []interface{}) ([]byte, error){
-		PostProperty: MarshalProperty,
-		PostEvent:    MarshalEvent,
+func (t *TLV) Marshal(data interface{}) (interface{}, error) {
+	v, ok := data.([]interface{})
+	if ok {
+		return tlv.MakeTLVs(v)
 	}
-	return m[t](data)
+	return nil, errors.New("")
+}
+
+// Unmarshal 反序列化
+func (t *TLV) Unmarshal(data interface{}) (interface{}, error) {
+	return nil, nil
+}
+
+// MakePostPropertyData 创建序列化后的数据
+func (t *TLV) MakePostPropertyData(property *Property) ([]byte, error) {
+	payloadHead := protocol.DataHead{
+		Flag:      0,
+		Timestamp: uint64(time.Now().Unix() * 1000),
+	}
+	params, err := t.Marshal(property.Value)
+	paramsTLV, ok := params.([]tlv.TLV)
+	if !ok {
+		return nil, errors.New("marshal property failed")
+	}
+	if err != nil {
+		return nil, err
+	}
+	// 内嵌数据
+	sub := protocol.SubData{
+		Head: protocol.SubDataHead{
+			SubDeviceid: property.SubDeviceID,
+			PropertyNum: property.PropertyID,
+			ParamsCount: uint16(len(paramsTLV)),
+		},
+		Params: paramsTLV,
+	}
+	// 组装数据
+	status := protocol.Data{
+		Head:    payloadHead,
+		SubData: []protocol.SubData{},
+	}
+	status.SubData = append(status.SubData, sub)
+	// 转 byte
+	return status.Marshal()
 }
 
 // MarshalProperty 属性序列化
@@ -79,7 +110,7 @@ func MarshalEvent(data []interface{}) ([]byte, error) {
 }
 
 // UnmarshalCommand 命令反序列化
-func UnmarshalCommand(data []byte) (interface{}, error) {
+func (t *TLV) UnmarshalCommand(data []byte) (*Command, error) {
 	cmd := protocol.Command{}
 	dataByte := make([]byte, len(data))
 	for i, v := range data {
@@ -93,5 +124,14 @@ func UnmarshalCommand(data []byte) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return cmd, nil
+	params := map[int]interface{}{}
+	for i, v := range cmd.Params {
+		params[i] = v.Value
+	}
+	ret := &Command{
+		ID:          cmd.Head.No,
+		SubDeviceID: cmd.Head.SubDeviceid,
+		Params:      params,
+	}
+	return ret, nil
 }

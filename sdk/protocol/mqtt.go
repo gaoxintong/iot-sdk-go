@@ -2,9 +2,10 @@ package protocol
 
 import (
 	"errors"
+	"fmt"
 	mqtt "iot-sdk-go/pkg/mqtt"
 	"iot-sdk-go/pkg/types"
-	"reflect"
+	"iot-sdk-go/sdk/request"
 )
 
 // MQTT 实现
@@ -15,17 +16,6 @@ type MQTT struct {
 // NewMQTT 创建 MQTT 对象
 func NewMQTT() *MQTT {
 	return &MQTT{}
-}
-
-// ParamsFormatter 参数格式化
-func ParamsFormatter(s interface{}) map[string]interface{} {
-	t := reflect.TypeOf(s)
-	v := reflect.ValueOf(s)
-	ret := make(map[string]interface{})
-	for i := 0; i < t.NumField(); i++ {
-		ret[t.Field(i).Name] = v.Field(i).Interface()
-	}
-	return ret
 }
 
 // MakeOpts 创建配置项
@@ -73,25 +63,22 @@ func (m *MQTT) NewClient(opts interface{}) error {
 	return nil
 }
 
+// Options 配置项
+type Options struct {
+	Topic    string
+	Qos      byte
+	Retained bool
+	Payload  interface{}
+	Callback func(request.Response)
+}
+
 // Publish 发布
-func (m *MQTT) Publish(params map[string]interface{}) error {
-	topic, err := types.InterfaceToString(params["Topic"])
+func (m *MQTT) Publish(opts map[string]interface{}) error {
+	finllyOpts, err := getOpts(opts)
 	if err != nil {
 		return err
 	}
-	qos, err := types.InterfaceToByte(params["Qos"])
-	if err != nil {
-		return err
-	}
-	retained, err := types.InterfaceToBool(params["Retained"])
-	if err != nil {
-		return err
-	}
-	payload := params["Payload"]
-	if err := m.Client.Publish(topic, qos, retained, payload).Error(); err != nil {
-		return err
-	}
-	return nil
+	return m.Client.Publish(finllyOpts.Topic, finllyOpts.Qos, finllyOpts.Retained, finllyOpts.Payload).Error()
 }
 
 // InterfaceToMqttMessageHandler 接口转函数
@@ -103,32 +90,66 @@ func InterfaceToMqttMessageHandler(v interface{}) (mqtt.MessageHandler, error) {
 	return nil, errors.New("interface to Mqtt MessageHandler failed")
 }
 
+// InterfaceToCallbackFn 接口转函数
+func InterfaceToCallbackFn(v interface{}) (func(request.Response), error) {
+	switch v.(type) {
+	case func(request.Response):
+		return v.(func(request.Response)), nil
+	}
+	return nil, errors.New("interface to callback func failed")
+}
+
+// getOpts 转换生成 MQTT 配置项
+func getOpts(opts map[string]interface{}) (*Options, error) {
+	topic, err := types.InterfaceToString(opts["Topic"])
+	if err != nil {
+		return nil, err
+	}
+	qos, err := types.InterfaceToByte(opts["Qos"])
+	if err != nil {
+		qos = 0
+	}
+	retained, err := types.InterfaceToBool(opts["Retained"])
+	if err != nil {
+		retained = false
+	}
+	payload := opts["Payload"]
+	callback, err := InterfaceToCallbackFn(opts["Callback"])
+	if err != nil {
+		callback = nil
+	}
+	return &Options{
+		Topic:    topic,
+		Qos:      qos,
+		Retained: retained,
+		Payload:  payload,
+		Callback: callback,
+	}, nil
+}
+
 // Subscribe 订阅
-func (m *MQTT) Subscribe(params map[string]interface{}) error {
-	topic, err := types.InterfaceToString(params["topic"])
+func (m *MQTT) Subscribe(opts map[string]interface{}) error {
+	finllyOpts, err := getOpts(opts)
 	if err != nil {
 		return err
 	}
-	qos, err := types.InterfaceToByte(params["qos"])
-	if err != nil {
-		return err
+	var cb mqtt.MessageHandler = func(c *mqtt.Client, m mqtt.Message) {
+		fmt.Println("not is nil")
+		if finllyOpts.Callback != nil {
+			fmt.Println("is nil")
+			finllyOpts.Callback(m)
+		}
 	}
-	callback, err := InterfaceToMqttMessageHandler(params["callback"])
-	if err != nil {
-		return err
-	}
-	m.Client.Subscribe(topic, qos, callback)
-	return nil
+	return m.Client.Subscribe(finllyOpts.Topic, finllyOpts.Qos, cb).Error()
 }
 
 // Unsubscribe 取消订阅
-func (m *MQTT) Unsubscribe(params map[string]interface{}) error {
-	topics, err := types.InterfaceToSliceString(params["topics"])
+func (m *MQTT) Unsubscribe(opts map[string]interface{}) error {
+	topics, err := types.InterfaceToSliceString(opts["topics"])
 	if err != nil {
 		return err
 	}
-	m.Client.Unsubscribe(topics...)
-	return nil
+	return m.Client.Unsubscribe(topics...).Error()
 }
 
 // GetName 获取协议名
