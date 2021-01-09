@@ -33,6 +33,54 @@ type Device struct {
 	Storage    storage.Storage
 }
 
+// Option 配置函数
+type Option func(*Device)
+
+// NewDevice 创建设备
+func NewDevice(ProductKey string, Name string, Version string, opts ...func(*Device)) *Device {
+	device := &Device{
+		ProductKey: Version,
+		Name:       Version,
+		Version:    Version,
+		Protocol:   protocol.NewMQTT(),
+		Serializer: serializer.NewTLV(),
+		Topics:     topics.DefaultTopics,
+		Storage:    &storage.LocalStorage{},
+	}
+	for _, opt := range opts {
+		opt(device)
+	}
+	return device
+}
+
+// Protocol 设置协议
+func Protocol(protocol protocol.Protocol) Option {
+	return func(d *Device) {
+		d.Protocol = protocol
+	}
+}
+
+// Serializer 设置序列化器
+func Serializer(serializer serializer.Serializer) Option {
+	return func(d *Device) {
+		d.Serializer = serializer
+	}
+}
+
+// Topics 设置主题列表
+func Topics(topics topics.Topics) Option {
+	return func(d *Device) {
+		d.Topics = topics
+	}
+}
+
+// Storage 设置存储
+func Storage(storage storage.Storage) Option {
+	return func(d *Device) {
+		d.Storage = storage
+	}
+}
+
 // GetDeviceInfo 获取设备信息
 func (d *Device) GetDeviceInfo() (*Device, error) {
 	ProductKeyInter, err := d.Storage.Get("ProductKey")

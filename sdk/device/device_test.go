@@ -22,12 +22,7 @@ func init() {
 		Register: "http://192.168.1.101:8088/v1/devices/registration",
 		Login:    "http://192.168.1.101:8088/v1/devices/authentication",
 	})
-	light = NewBuilder().
-		SetProductKey(ProductKey).
-		SetDeviceName(DeviceName).
-		SetVersion(Version).
-		SetTopics(topics).
-		Build()
+	light = NewDevice(ProductKey, DeviceName, Version, Topics(topics))
 	light.LoadDeviceInfo()
 }
 

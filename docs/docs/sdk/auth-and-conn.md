@@ -15,34 +15,30 @@ slug: /sdk/auth-and-conn
 
 通过这三个属性进行初始化设备。
 
-device.NewBuilder 是一个 device 构造器，通过一系列配置后，调用 Build 方法创建出 device 实例。
-
 接下来创建一个智能电灯。
 
 代码示例：
 
 ```go
-ProductKey = "491e1ba0bc0ade7bb8cdb0b14483be2b312841122ee861f8fdbf0e4a4eacff52"
-DeviceName = "light"
-Version    = "1.0.1"
-light = NewBuilder().
-  SetProductKey(ProductKey).
-  SetDeviceName(DeviceName).
-  SetVersion(Version).
-  Build()
+ProductKey := "491e1ba0bc0ade7bb8cdb0b14483be2b312841122ee861f8fdbf0e4a4eacff52"
+DeviceName := "light"
+Version    := "1.0.1"
+topics     := topics.Override(topics.Topics{
+  Register: "http://192.168.1.101:8088/v1/devices/registration",
+  Login:    "http://192.168.1.101:8088/v1/devices/authentication",
+})
+light := NewDevice(ProductKey, DeviceName, Version, Topics(topics))
 ```
 
-| 方法          |                                                          描述 |
-| :------------ | ------------------------------------------------------------: |
-| NewBuilder    | 创建 device.Builder 实例，该实例用于创建 device.Device 实例。 |
-| SetProductKey |                                                设置产品 Key。 |
-| SetDeviceName |                                                设置产品名称。 |
-| SetVersion    |                                                设置设备版本。 |
-| SetProtocol   |                                     设置协议类型，默认 MQTT。 |
-| SetSerializer |                                      设置序列化器，默认 TLV。 |
-| SetTopics     |                                        设置注册、登陆和主题。 |
-| SetStorage    |                                      设置存储，默认本地存储。 |
-| Build         |                                     构建 device.Device 实例。 |
+| 参数       |                  类型 | 描述       | 默认值        |
+| :--------- | --------------------: | :--------- | :------------ |
+| ProductKey |                string | 产品 Key。 | 必填          |
+| DeviceName |                string | 产品名称。 | 必填          |
+| Version    |                string | 设备版本。 | 必填          |
+| Protocol   |     protocol.Protocol | 协议类型。 | MQTT          |
+| Serializer | serializer.Serializer | 序列化器。 | TLV           |
+| Topics     |         topics.Topics | 主题列表。 | DefaultTopics |
+| Storage    |       storage.Storage | 配置存储。 | LocalStorage  |
 
 ## 设备注册
 
