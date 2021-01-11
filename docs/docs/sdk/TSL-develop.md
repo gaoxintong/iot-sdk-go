@@ -126,4 +126,21 @@ if err != nil {
 
 ## 事件上报
 
-暂无
+```go
+// 触发关闭事件
+func closeEvent(subDeviceID int, propertyID int) {
+  // 获取硬件数据
+  var status uint16 = 0
+  value := []interface{}{status}
+  // 设置子设备ID 和属性
+  p := Property{
+    subDeviceID: subDeviceID,
+    PropertyID:  propertyID,
+    Value:       value,
+  }
+  // 事件上报
+  if err := light.PostEvent("close", p); err != nil {
+    fmt.Println("post evnet error:", err)
+  }
+}
+```

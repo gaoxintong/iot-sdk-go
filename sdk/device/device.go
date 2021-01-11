@@ -288,7 +288,7 @@ func (p *Property) toSerializerProperty() *serializer.Property {
 
 // PostProperty 上报属性
 func (d *Device) PostProperty(property Property) error {
-	data, err := d.Serializer.MakePostPropertyData(property.toSerializerProperty())
+	data, err := d.Serializer.MakePropertyData(property.toSerializerProperty())
 	if err != nil {
 		return err
 	}
@@ -299,7 +299,7 @@ func (d *Device) PostProperty(property Property) error {
 	return d.Protocol.Publish(request)
 }
 
-// makePostPropertyRequest 创建属性请求
+// makePostPropertyRequest 创建上报属性请求
 func makePostPropertyRequest(d *Device, payload []byte) *request.Request {
 	request := &request.Request{}
 	request.Topic = d.Topics.PostProperty
@@ -383,18 +383,23 @@ func (d *Device) OnProperty(callback func(property interface{})) {
 }
 
 // PostEvent 发送事件
-func (d *Device) PostEvent(identifier string, property []interface{}) error {
-	request := request.Request{}
-	request.Topic = d.Topics.PostEvent
-	request.Qos = 1
-	payload, err := d.Serializer.Marshal(property)
-	request.Payload = payload
+func (d *Device) PostEvent(identifier string, property Property) error {
+	data, err := d.Serializer.MakeEventData(property.toSerializerProperty())
 	if err != nil {
 		return err
 	}
-	params := protocol.OptionsFormatter(request)
-	d.Protocol.Publish(params)
-	return nil
+	request := protocol.OptionsFormatter(*makePostEventRequest(d, data))
+	return d.Protocol.Publish(request)
+}
+
+// makePostEventRequest 创建上报事件请求
+func makePostEventRequest(d *Device, payload []byte) *request.Request {
+	request := &request.Request{}
+	request.Topic = d.Topics.PostEvent
+	request.Qos = 1
+	request.Retained = false
+	request.Payload = payload
+	return request
 }
 
 // Command 命令

@@ -4,7 +4,8 @@ package serializer
 type Serializer interface {
 	Marshal(data interface{}) (interface{}, error)
 	Unmarshal(data interface{}) (interface{}, error)
-	MakePostPropertyData(data *Property) ([]byte, error)
+	MakePropertyData(data *Property) ([]byte, error)
+	MakeEventData(data *Property) ([]byte, error)
 	UnmarshalCommand(data []byte) (*Command, error)
 }
 

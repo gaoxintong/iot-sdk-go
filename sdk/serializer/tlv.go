@@ -33,8 +33,8 @@ func (t *TLV) Unmarshal(data interface{}) (interface{}, error) {
 	return nil, nil
 }
 
-// MakePostPropertyData 创建序列化后的数据
-func (t *TLV) MakePostPropertyData(property *Property) ([]byte, error) {
+// MakePropertyData 创建序列化后的属性数据
+func (t *TLV) MakePropertyData(property *Property) ([]byte, error) {
 	payloadHead := protocol.DataHead{
 		Flag:      0,
 		Timestamp: uint64(time.Now().Unix() * 1000),
@@ -66,46 +66,21 @@ func (t *TLV) MakePostPropertyData(property *Property) ([]byte, error) {
 	return status.Marshal()
 }
 
-// MarshalProperty 属性序列化
-func MarshalProperty(data []interface{}) ([]byte, error) {
-	payloadHead := protocol.DataHead{
-		Flag:      0,
-		Timestamp: uint64(time.Now().Unix() * 1000),
-	}
-	params, err := tlv.MakeTLVs(data)
-	if err != nil {
-		return nil, err
-	}
-	// 内嵌数据
-	sub := protocol.SubData{
-		Head: protocol.SubDataHead{
-			SubDeviceid: uint16(1),
-			PropertyNum: uint16(1),
-			ParamsCount: uint16(len(params)),
-		},
-		Params: params,
-	}
-	// 组装数据
-	status := protocol.Data{
-		Head:    payloadHead,
-		SubData: []protocol.SubData{},
-	}
-	status.SubData = append(status.SubData, sub)
-	// 转 byte
-	return status.Marshal()
-}
-
-// MarshalEvent 事件序列化
-func MarshalEvent(data []interface{}) ([]byte, error) {
+// MakeEventData 创建序列化后的事件数据
+func (t *TLV) MakeEventData(property *Property) ([]byte, error) {
 	event := protocol.Event{}
-	params, err := tlv.MakeTLVs(data)
+	params, err := t.Marshal(property.Value)
 	if err != nil {
 		return nil, err
 	}
-	event.Params = params
-	event.Head.No = 1
-	event.Head.SubDeviceid = 1
-	event.Head.ParamsCount = uint16(len(params))
+	paramsTLV, ok := params.([]tlv.TLV)
+	if !ok {
+		return nil, errors.New("marshal property failed")
+	}
+	event.Params = paramsTLV
+	event.Head.No = property.PropertyID
+	event.Head.SubDeviceid = property.SubDeviceID
+	event.Head.ParamsCount = uint16(len(paramsTLV))
 	return event.Marshal()
 }
 
