@@ -122,7 +122,7 @@ if err != nil {
 | ID       |                    uint16 | 命令 ID  | 必填   |
 | Callback | func(map[int]interface{}) | 回调函数 | 必填   |
 
-回调函数的参数类型是一个兼职对，按照配置顺序进行排列，-1 所对应的参数是 SubDeviceID。
+回调函数的参数类型是一个键值对，按照配置顺序进行排列，-1 所对应的参数是 SubDeviceID。
 
 ## 事件上报
 
