@@ -7,7 +7,7 @@ type Protocol interface {
 	Publish(opts map[string]interface{}) error
 	Subscribe(opts map[string]interface{}) error
 	Unsubscribe(opts map[string]interface{}) error
-	MakeOpts(opts map[string]interface{}) interface{}
+	MakeOpts(opts map[string]interface{}) (interface{}, error)
 	NewClient(opts interface{}) error
 	GetName() string
 	GetInstance() interface{}

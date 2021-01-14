@@ -24,6 +24,15 @@ func InterfaceToByte(v interface{}) (byte, error) {
 	return 0, errors.New("interface to byte failed")
 }
 
+// InterfaceToSliceByte 接口转[]Byte
+func InterfaceToSliceByte(v interface{}) ([]byte, error) {
+	switch v.(type) {
+	case []byte:
+		return v.([]byte), nil
+	}
+	return nil, errors.New("interface to []byte failed")
+}
+
 // InterfaceToInt 接口转Int
 func InterfaceToInt(v interface{}) (int, error) {
 	switch v.(type) {

@@ -1,11 +1,12 @@
 package protocol
 
 import (
-	"errors"
 	"fmt"
 	mqtt "iot-sdk-go/pkg/mqtt"
 	"iot-sdk-go/pkg/types"
 	"iot-sdk-go/sdk/request"
+
+	"github.com/pkg/errors"
 )
 
 // MQTT 实现
@@ -19,26 +20,26 @@ func NewMQTT() *MQTT {
 }
 
 // MakeOpts 创建配置项
-func (m *MQTT) MakeOpts(params map[string]interface{}) interface{} {
+func (m *MQTT) MakeOpts(params map[string]interface{}) (interface{}, error) {
 	Broker, err := types.InterfaceToString(params["Broker"])
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
 	ClientID, err := types.InterfaceToString(params["ClientID"])
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
 	Username, err := types.InterfaceToString(params["Username"])
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
 	Password, err := types.InterfaceToString(params["Password"])
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
 	KeepAlive, err := types.InterfaceToDuration(params["KeepAlive"])
 	if err != nil {
-		return err
+		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
 	opts := mqtt.NewClientOptions().AddBroker("tcp://" + Broker)
 	opts.SetClientID(ClientID)
@@ -46,7 +47,7 @@ func (m *MQTT) MakeOpts(params map[string]interface{}) interface{} {
 	opts.SetPassword(Password)
 	opts.SetKeepAlive(KeepAlive)
 	// opts.SetDefaultPublishHandler()
-	return opts
+	return opts, nil
 }
 
 // NewClient 创建客户端
@@ -57,7 +58,7 @@ func (m *MQTT) NewClient(opts interface{}) error {
 	}
 	c := mqtt.NewClient(typedOpts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		return token.Error()
+		return errors.Wrap(token.Error(), "new mqtt client failed")
 	}
 	m.Client = c
 	return nil
@@ -76,7 +77,7 @@ type Options struct {
 func (m *MQTT) Publish(opts map[string]interface{}) error {
 	finllyOpts, err := getOpts(opts)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "mqtt publish failed")
 	}
 	return m.Client.Publish(finllyOpts.Topic, finllyOpts.Qos, finllyOpts.Retained, finllyOpts.Payload).Error()
 }

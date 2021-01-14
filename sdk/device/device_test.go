@@ -19,8 +19,8 @@ var light *Device
 
 func init() {
 	topics := topics.Override(topics.Topics{
-		Register: "http://192.168.1.101:8088/v1/devices/registration",
-		Login:    "http://192.168.1.101:8088/v1/devices/authentication",
+		Register: "http://39.98.250.155:18100/v1/devices/registration",
+		Login:    "http://39.98.250.155:18100/v1/devices/authentication",
 	})
 	light = NewDevice(ProductKey, DeviceName, Version, Topics(topics))
 	light.LoadDeviceInfo()
@@ -34,14 +34,14 @@ type LightTSL struct {
 func TestRegister(t *testing.T) {
 	err := light.Register()
 	if err != nil {
-		fmt.Println("register error:", err.Error())
+		fmt.Println("register error113:", err.Error())
 	}
 }
 
 func TestLogin(t *testing.T) {
 	err := light.Login()
 	if err != nil {
-		fmt.Println("login error:", err.Error())
+		fmt.Println("login error7:", err.Error())
 	}
 }
 
@@ -54,7 +54,7 @@ func TestPostProperty(t *testing.T) {
 	// 初始化协议客户端
 	err = light.InitProtocolClient()
 	if err != nil {
-		t.Fatal("init client error:", err.Error())
+		t.Fatal("init client error3:", err.Error())
 	}
 	// 发送 20 次
 	count := 0
@@ -134,7 +134,7 @@ func TestAutoPostProperty(t *testing.T) {
 	// 发送数据
 	tick := time.Tick(1 * time.Second)
 	for {
-		fmt.Println("post property")
+		fmt.Println("post property2")
 		// 获取硬件数据
 		var status uint16 = 1
 		var brightness uint16 = 88

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/imdario/mergo"
+	"github.com/pkg/errors"
 )
 
 // Device 设备
@@ -88,33 +89,52 @@ func (d *Device) GetDeviceInfo() (*Device, error) {
 		return nil, err
 	}
 	ProductKey, _ := types.InterfaceToString(ProductKeyInter)
+
 	NameInter, err := d.Storage.Get("Name")
 	if err != nil {
 		return nil, err
 	}
 	Name, _ := types.InterfaceToString(NameInter)
+
 	SecretInter, err := d.Storage.Get("Secret")
 	if err != nil {
 		return nil, err
 	}
 	Secret, _ := types.InterfaceToString(SecretInter)
+
 	VersionInter, err := d.Storage.Get("Version")
 	if err != nil {
 		return nil, err
 	}
 	Version, _ := types.InterfaceToString(VersionInter)
+
 	IDInter, err := d.Storage.Get("ID")
 	if err != nil {
 		return nil, err
 	}
 	IDInt, _ := types.InterfaceToInt(IDInter)
 	ID := int64(IDInt)
+
+	AccessInter, err := d.Storage.Get("Access")
+	if err != nil {
+		return nil, err
+	}
+	Access, _ := types.InterfaceToString(AccessInter)
+
+	TokenInter, err := d.Storage.Get("Token")
+	if err != nil {
+		return nil, err
+	}
+	Token, _ := types.InterfaceToSliceByte(TokenInter)
+
 	return &Device{
 		ProductKey: ProductKey,
 		Name:       Name,
 		Secret:     Secret,
 		Version:    Version,
 		ID:         ID,
+		Access:     Access,
+		Token:      Token,
 	}, nil
 }
 
@@ -225,7 +245,9 @@ func (d *Device) Login() error {
 		return err
 	}
 	d.Token = hexToken
-	d.Access = response.Data.AccessAddr
+	// d.Access = response.Data.AccessAddr
+	// FIXME: 暂时写死
+	d.Access = "39.98.250.155:18106"
 	d.SetDeviceInfo()
 	return nil
 }
@@ -247,6 +269,10 @@ func (d *Device) InitProtocolClient(opts ...interface{}) error {
 		return d.Protocol.NewClient(opts[0])
 	}
 	// 默认创建 MQTT 配置
+	return d.initMQTTClient()
+}
+
+func (d *Device) initMQTTClient() error {
 	IDStr := strconv.Itoa(int(d.ID))
 	TokenStr := hex.EncodeToString(d.Token) // 817aecf06c023365
 	mqttOpts := map[string]interface{}{
@@ -256,7 +282,10 @@ func (d *Device) InitProtocolClient(opts ...interface{}) error {
 		"Password":  TokenStr,
 		"KeepAlive": 30 * time.Second,
 	}
-	newOpts := d.Protocol.MakeOpts(mqttOpts)
+	newOpts, err := d.Protocol.MakeOpts(mqttOpts)
+	if err != nil {
+		return errors.Wrap(err, "init mqtt client failed")
+	}
 	return d.Protocol.NewClient(newOpts)
 }
 
@@ -372,7 +401,9 @@ func (d *Device) AutoInit(opts ...InitOptions) error {
 func (d *Device) AutoPostProperty(property Property, opts ...InitOptions) error {
 	finallyOpts := getFinallyInitOpts(opts...)
 	if types.IsNil(d.Protocol.GetInstance()) {
-		d.AutoInit(finallyOpts)
+		if err := d.AutoInit(finallyOpts); err != nil {
+			return errors.Wrap(err, "auto init failed")
+		}
 	}
 	return d.PostProperty(property)
 }
