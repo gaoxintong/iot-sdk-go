@@ -40,8 +40,8 @@ type Option func(*Device)
 // NewDevice 创建设备
 func NewDevice(ProductKey string, Name string, Version string, opts ...func(*Device)) *Device {
 	device := &Device{
-		ProductKey: Version,
-		Name:       Version,
+		ProductKey: ProductKey,
+		Name:       Name,
 		Version:    Version,
 		Protocol:   protocol.NewMQTT(),
 		Serializer: serializer.NewTLV(),
@@ -206,10 +206,10 @@ func (d *Device) Register() error {
 	body, _ := ioutil.ReadAll(jsonresp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device register failed, register rest api response convert to json failed")
 	}
 	if err := HTTPIsOK(response); err != nil {
-		return err
+		return errors.Wrap(err, "device register failed, register rest api state not is ok")
 	}
 	d.ID = response.Data.ID
 	d.Secret = response.Data.Secret
