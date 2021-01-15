@@ -192,15 +192,15 @@ func (d *Device) SetDeviceInfo() error {
 func (d *Device) Register() error {
 	args, err := RegisterArgsFromDevice(*d)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device register failed, from device create register arguments failed")
 	}
 	argsStr, err := json.Marshal(args)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device register failed, register arguments convert to json failed")
 	}
 	jsonresp, err := http.Post(d.Topics.Register, "application/json", strings.NewReader(string(argsStr)))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device register failed, register arguments convert to json failed")
 	}
 	response := RegisterResponse{}
 	body, _ := ioutil.ReadAll(jsonresp.Body)
@@ -221,28 +221,28 @@ func (d *Device) Register() error {
 func (d *Device) Login() error {
 	args, err := AuthArgsFromDevice(*d)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device login failed, from device create auth arguments failed")
 	}
 	argsStr, err := json.Marshal(args)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device login failed, auth arguments convert to json failed")
 	}
 	jsonresp, err := http.Post(d.Topics.Login, "application/json", strings.NewReader(string(argsStr)))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device login failed, request login rest api failed")
 	}
 	response := AuthResponse{}
 	body, _ := ioutil.ReadAll(jsonresp.Body)
 	err = json.Unmarshal(body, &response)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device login failed, login rest api response convert to json failed")
 	}
 	if err := HTTPIsOK(response); err != nil {
-		return err
+		return errors.Wrap(err, "device login failed, login rest api state not is ok")
 	}
 	hexToken, err := hex.DecodeString(response.Data.AccessToken)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "device login failed, access convert to byte failed")
 	}
 	d.Token = hexToken
 	// d.Access = response.Data.AccessAddr
