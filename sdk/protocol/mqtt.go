@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	mqtt "iot-sdk-go/pkg/mqtt"
+	"iot-sdk-go/pkg/mqtt"
 	"iot-sdk-go/pkg/types"
 	"iot-sdk-go/sdk/request"
 
