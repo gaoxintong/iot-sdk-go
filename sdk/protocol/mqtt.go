@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"fmt"
 	mqtt "iot-sdk-go/pkg/mqtt"
 	"iot-sdk-go/pkg/types"
 	"iot-sdk-go/sdk/request"
@@ -135,9 +134,7 @@ func (m *MQTT) Subscribe(opts map[string]interface{}) error {
 		return err
 	}
 	var cb mqtt.MessageHandler = func(c *mqtt.Client, m mqtt.Message) {
-		fmt.Println("not is nil")
 		if finllyOpts.Callback != nil {
-			fmt.Println("is nil")
 			finllyOpts.Callback(m)
 		}
 	}
