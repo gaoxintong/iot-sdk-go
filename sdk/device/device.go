@@ -84,44 +84,44 @@ func Storage(storage storage.Storage) Option {
 
 // GetDeviceInfo 获取设备信息
 func (d *Device) GetDeviceInfo() (*Device, error) {
-	ProductKeyInter, err := d.Storage.Get("ProductKey")
+	ProductKeyInter, err := d.Storage.Get(d.Name + ".ProductKey")
 	if err != nil {
 		return nil, err
 	}
 	ProductKey, _ := types.InterfaceToString(ProductKeyInter)
 
-	NameInter, err := d.Storage.Get("Name")
+	NameInter, err := d.Storage.Get(d.Name + ".Name")
 	if err != nil {
 		return nil, err
 	}
 	Name, _ := types.InterfaceToString(NameInter)
 
-	SecretInter, err := d.Storage.Get("Secret")
+	SecretInter, err := d.Storage.Get(d.Name + ".Secret")
 	if err != nil {
 		return nil, err
 	}
 	Secret, _ := types.InterfaceToString(SecretInter)
 
-	VersionInter, err := d.Storage.Get("Version")
+	VersionInter, err := d.Storage.Get(d.Name + ".Version")
 	if err != nil {
 		return nil, err
 	}
 	Version, _ := types.InterfaceToString(VersionInter)
 
-	IDInter, err := d.Storage.Get("ID")
+	IDInter, err := d.Storage.Get(d.Name + ".ID")
 	if err != nil {
 		return nil, err
 	}
 	IDInt, _ := types.InterfaceToInt(IDInter)
 	ID := int64(IDInt)
 
-	AccessInter, err := d.Storage.Get("Access")
+	AccessInter, err := d.Storage.Get(d.Name + ".Access")
 	if err != nil {
 		return nil, err
 	}
 	Access, _ := types.InterfaceToString(AccessInter)
 
-	TokenInter, err := d.Storage.Get("Token")
+	TokenInter, err := d.Storage.Get(d.Name + ".Token")
 	if err != nil {
 		return nil, err
 	}
@@ -151,37 +151,37 @@ func (d *Device) LoadDeviceInfo() error {
 func (d *Device) SetDeviceInfo() error {
 	storage := d.Storage
 	if d.ProductKey != "" {
-		if err := storage.Set("ProductKey", d.ProductKey); err != nil {
+		if err := storage.Set(d.Name+".ProductKey", d.ProductKey); err != nil {
 			return err
 		}
 	}
 	if d.Name != "" {
-		if err := storage.Set("Name", d.Name); err != nil {
+		if err := storage.Set(d.Name+".Name", d.Name); err != nil {
 			return err
 		}
 	}
 	if d.Secret != "" {
-		if err := storage.Set("Secret", d.Secret); err != nil {
+		if err := storage.Set(d.Name+".Secret", d.Secret); err != nil {
 			return err
 		}
 	}
 	if d.Version != "" {
-		if err := storage.Set("Version", d.Version); err != nil {
+		if err := storage.Set(d.Name+".Version", d.Version); err != nil {
 			return err
 		}
 	}
 	if d.ID != 0 {
-		if err := storage.Set("ID", d.ID); err != nil {
+		if err := storage.Set(d.Name+".ID", d.ID); err != nil {
 			return err
 		}
 	}
 	if d.Token != nil {
-		if err := storage.Set("Token", d.Token); err != nil {
+		if err := storage.Set(d.Name+".Token", d.Token); err != nil {
 			return err
 		}
 	}
 	if d.Access != "" {
-		if err := storage.Set("Access", d.Access); err != nil {
+		if err := storage.Set(d.Name+".Access", d.Access); err != nil {
 			return err
 		}
 	}
