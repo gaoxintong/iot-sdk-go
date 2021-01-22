@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"iot-sdk-go/pkg/mqtt"
-	"iot-sdk-go/pkg/types"
+	"iot-sdk-go/pkg/typeconv"
 	"iot-sdk-go/sdk/request"
 
 	"github.com/pkg/errors"
@@ -20,23 +20,23 @@ func NewMQTT() *MQTT {
 
 // MakeOpts 创建配置项
 func (m *MQTT) MakeOpts(params map[string]interface{}) (interface{}, error) {
-	Broker, err := types.InterfaceToString(params["Broker"])
+	Broker, err := typeconv.InterfaceToString(params["Broker"])
 	if err != nil {
 		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
-	ClientID, err := types.InterfaceToString(params["ClientID"])
+	ClientID, err := typeconv.InterfaceToString(params["ClientID"])
 	if err != nil {
 		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
-	Username, err := types.InterfaceToString(params["Username"])
+	Username, err := typeconv.InterfaceToString(params["Username"])
 	if err != nil {
 		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
-	Password, err := types.InterfaceToString(params["Password"])
+	Password, err := typeconv.InterfaceToString(params["Password"])
 	if err != nil {
 		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
-	KeepAlive, err := types.InterfaceToDuration(params["KeepAlive"])
+	KeepAlive, err := typeconv.InterfaceToDuration(params["KeepAlive"])
 	if err != nil {
 		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
@@ -101,15 +101,15 @@ func InterfaceToCallbackFn(v interface{}) (func(request.Response), error) {
 
 // getOpts 转换生成 MQTT 配置项
 func getOpts(opts map[string]interface{}) (*Options, error) {
-	topic, err := types.InterfaceToString(opts["Topic"])
+	topic, err := typeconv.InterfaceToString(opts["Topic"])
 	if err != nil {
 		return nil, err
 	}
-	qos, err := types.InterfaceToByte(opts["Qos"])
+	qos, err := typeconv.InterfaceToByte(opts["Qos"])
 	if err != nil {
 		qos = 0
 	}
-	retained, err := types.InterfaceToBool(opts["Retained"])
+	retained, err := typeconv.InterfaceToBool(opts["Retained"])
 	if err != nil {
 		retained = false
 	}
@@ -143,7 +143,7 @@ func (m *MQTT) Subscribe(opts map[string]interface{}) error {
 
 // Unsubscribe 取消订阅
 func (m *MQTT) Unsubscribe(opts map[string]interface{}) error {
-	topics, err := types.InterfaceToSliceString(opts["topics"])
+	topics, err := typeconv.InterfaceToSliceString(opts["topics"])
 	if err != nil {
 		return err
 	}

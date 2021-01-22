@@ -10,9 +10,12 @@ import (
 )
 
 const (
-	ProductKey = "491e1ba0bc0ade7bb8cdb0b14483be2b312841122ee861f8fdbf0e4a4eacff52"
-	DeviceName = "qxq19900805"
-	Version    = "1.0.1"
+	// ProductKey = "491e1ba0bc0ade7bb8cdb0b14483be2b312841122ee861f8fdbf0e4a4eacff52"
+	// DeviceName = "qxq19900805"
+	// Version    = "1.0.1"
+	ProductKey = "abdf6b26a399494869c5db5476d1d617fdb5f7d6579fd093ccf78c77ea61e70f"
+	DeviceName = "relay"
+	Version    = "1.0.0"
 )
 
 var light *Device
@@ -22,8 +25,8 @@ func init() {
 		Register: "http://39.98.250.155:18100/v1/devices/registration",
 		Login:    "http://39.98.250.155:18100/v1/devices/authentication",
 	})
-	light = NewDevice(ProductKey, DeviceName, Version, Topics(topics))
-	light.LoadDeviceInfo()
+	light = New(ProductKey, DeviceName, Version, Topics(topics))
+	// light.LoadDeviceInfo()
 }
 
 type LightTSL struct {
@@ -34,7 +37,7 @@ type LightTSL struct {
 func TestRegister(t *testing.T) {
 	err := light.Register()
 	if err != nil {
-		fmt.Println("register error113:", err.Error())
+		fmt.Println("register error114:", err.Error())
 	}
 }
 
@@ -134,7 +137,7 @@ func TestAutoPostProperty(t *testing.T) {
 	// 发送数据
 	tick := time.Tick(1 * time.Second)
 	for {
-		fmt.Println("post property2")
+		fmt.Println("post property3")
 		// 获取硬件数据
 		var status uint16 = 1
 		var brightness uint16 = 88

@@ -45,7 +45,7 @@ func TestGenRandomKey(t *testing.T) {
 	if err != nil {
 		fmt.Println("err1:", err)
 	}
-	key, err := generator.GenRandomKey(1)
+	key, err := generator.GenRandomKey(2)
 	if err != nil {
 		fmt.Println("err2:", err)
 	}

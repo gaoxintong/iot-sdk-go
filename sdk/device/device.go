@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"iot-sdk-go/pkg/types"
+	"iot-sdk-go/pkg/typeconv"
 	protocol "iot-sdk-go/sdk/protocol"
 	request "iot-sdk-go/sdk/request"
 	serializer "iot-sdk-go/sdk/serializer"
@@ -37,8 +37,8 @@ type Device struct {
 // Option 配置函数
 type Option func(*Device)
 
-// NewDevice 创建设备
-func NewDevice(ProductKey string, Name string, Version string, opts ...func(*Device)) *Device {
+// New 创建设备
+func New(ProductKey string, Name string, Version string, opts ...func(*Device)) *Device {
 	device := &Device{
 		ProductKey: ProductKey,
 		Name:       Name,
@@ -88,44 +88,44 @@ func (d *Device) GetDeviceInfo() (*Device, error) {
 	if err != nil {
 		return nil, err
 	}
-	ProductKey, _ := types.InterfaceToString(ProductKeyInter)
+	ProductKey, _ := typeconv.InterfaceToString(ProductKeyInter)
 
 	NameInter, err := d.Storage.Get(d.Name + ".Name")
 	if err != nil {
 		return nil, err
 	}
-	Name, _ := types.InterfaceToString(NameInter)
+	Name, _ := typeconv.InterfaceToString(NameInter)
 
 	SecretInter, err := d.Storage.Get(d.Name + ".Secret")
 	if err != nil {
 		return nil, err
 	}
-	Secret, _ := types.InterfaceToString(SecretInter)
+	Secret, _ := typeconv.InterfaceToString(SecretInter)
 
 	VersionInter, err := d.Storage.Get(d.Name + ".Version")
 	if err != nil {
 		return nil, err
 	}
-	Version, _ := types.InterfaceToString(VersionInter)
+	Version, _ := typeconv.InterfaceToString(VersionInter)
 
 	IDInter, err := d.Storage.Get(d.Name + ".ID")
 	if err != nil {
 		return nil, err
 	}
-	IDInt, _ := types.InterfaceToInt(IDInter)
+	IDInt, _ := typeconv.InterfaceToInt(IDInter)
 	ID := int64(IDInt)
 
 	AccessInter, err := d.Storage.Get(d.Name + ".Access")
 	if err != nil {
 		return nil, err
 	}
-	Access, _ := types.InterfaceToString(AccessInter)
+	Access, _ := typeconv.InterfaceToString(AccessInter)
 
 	TokenInter, err := d.Storage.Get(d.Name + ".Token")
 	if err != nil {
 		return nil, err
 	}
-	Token, _ := types.InterfaceToSliceByte(TokenInter)
+	Token, _ := typeconv.InterfaceToSliceByte(TokenInter)
 
 	return &Device{
 		ProductKey: ProductKey,
@@ -368,7 +368,7 @@ func getFinallyInitOpts(opts ...InitOptions) InitOptions {
 // AutoInit 自动初始化
 func (d *Device) AutoInit(opts ...InitOptions) error {
 	finallyOpts := getFinallyInitOpts(opts...)
-	if types.IsNil(d.Protocol.GetInstance()) {
+	if typeconv.IsNil(d.Protocol.GetInstance()) {
 		if err := d.AutoLogin(); err != nil {
 			if finallyOpts.AutoRelogin {
 				for {
@@ -400,7 +400,7 @@ func (d *Device) AutoInit(opts ...InitOptions) error {
 // AutoPostProperty 自动上报属性
 func (d *Device) AutoPostProperty(property Property, opts ...InitOptions) error {
 	finallyOpts := getFinallyInitOpts(opts...)
-	if types.IsNil(d.Protocol.GetInstance()) {
+	if typeconv.IsNil(d.Protocol.GetInstance()) {
 		if err := d.AutoInit(finallyOpts); err != nil {
 			return errors.Wrap(err, "auto init failed")
 		}

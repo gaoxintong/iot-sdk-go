@@ -3,7 +3,7 @@ package serializer
 import (
 	"errors"
 	"iot-sdk-go/pkg/tlv"
-	"iot-sdk-go/pkg/types"
+	"iot-sdk-go/pkg/typeconv"
 	"time"
 
 	"iot-sdk-go/pkg/protocol"
@@ -89,7 +89,7 @@ func (t *TLV) UnmarshalCommand(data []byte) (*Command, error) {
 	cmd := protocol.Command{}
 	dataByte := make([]byte, len(data))
 	for i, v := range data {
-		v2, err := types.InterfaceToByte(v)
+		v2, err := typeconv.InterfaceToByte(v)
 		if err != nil {
 			return nil, err
 		}
