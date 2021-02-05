@@ -27,7 +27,7 @@ topics     := topics.Override(topics.Topics{
   Register: "http://192.168.1.101:8088/v1/devices/registration",
   Login:    "http://192.168.1.101:8088/v1/devices/authentication",
 })
-light := NewDevice(ProductKey, DeviceName, Version, Topics(topics))
+light := New(ProductKey, DeviceName, Version, Topics(topics))
 ```
 
 | 参数       |                  类型 | 描述       | 默认值        |
