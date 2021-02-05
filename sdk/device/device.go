@@ -3,8 +3,10 @@ package device
 import (
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"iot-sdk-go/pkg/typeconv"
+	httpClient "iot-sdk-go/sdk/httpclient"
 	protocol "iot-sdk-go/sdk/protocol"
 	request "iot-sdk-go/sdk/request"
 	serializer "iot-sdk-go/sdk/serializer"
@@ -32,13 +34,14 @@ type Device struct {
 	Serializer serializer.Serializer
 	Topics     topics.Topics
 	Storage    storage.Storage
+	HTTPClient http.Client
 }
 
 // Option 配置函数
 type Option func(*Device)
 
 // New 创建设备
-func New(ProductKey string, Name string, Version string, opts ...func(*Device)) *Device {
+func New(ProductKey, Name, Version string, opts ...func(*Device)) *Device {
 	device := &Device{
 		ProductKey: ProductKey,
 		Name:       Name,
@@ -47,6 +50,7 @@ func New(ProductKey string, Name string, Version string, opts ...func(*Device)) 
 		Serializer: serializer.NewTLV(),
 		Topics:     topics.DefaultTopics,
 		Storage:    &storage.LocalStorage{},
+		HTTPClient: httpClient.DefaultClient,
 	}
 	for _, opt := range opts {
 		opt(device)
@@ -79,6 +83,13 @@ func Topics(topics topics.Topics) Option {
 func Storage(storage storage.Storage) Option {
 	return func(d *Device) {
 		d.Storage = storage
+	}
+}
+
+// HTTPClient 设置 Http 客户端
+func HTTPClient(HTTPClient http.Client) Option {
+	return func(d *Device) {
+		d.HTTPClient = HTTPClient
 	}
 }
 
@@ -195,12 +206,12 @@ func (d *Device) Register() error {
 		return errors.Wrap(err, "device register failed, from device create register arguments failed")
 	}
 	argsStr, err := json.Marshal(args)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return errors.Wrap(err, "device register failed, register arguments convert to json failed")
 	}
-	jsonresp, err := http.Post(d.Topics.Register, "application/json", strings.NewReader(string(argsStr)))
-	if err != nil {
-		return errors.Wrap(err, "device register failed, register arguments convert to json failed")
+	jsonresp, err := d.HTTPClient.Post(d.Topics.Register, "application/json", strings.NewReader(string(argsStr)))
+	if err != nil && err != io.EOF {
+		return errors.Wrap(err, "device register failed")
 	}
 	response := RegisterResponse{}
 	body, _ := ioutil.ReadAll(jsonresp.Body)
@@ -227,7 +238,7 @@ func (d *Device) Login() error {
 	if err != nil {
 		return errors.Wrap(err, "device login failed, auth arguments convert to json failed")
 	}
-	jsonresp, err := http.Post(d.Topics.Login, "application/json", strings.NewReader(string(argsStr)))
+	jsonresp, err := d.HTTPClient.Post(d.Topics.Login, "application/json", strings.NewReader(string(argsStr)))
 	if err != nil {
 		return errors.Wrap(err, "device login failed, request login rest api failed")
 	}
@@ -246,7 +257,7 @@ func (d *Device) Login() error {
 	}
 	d.Token = hexToken
 	// d.Access = response.Data.AccessAddr
-	// FIXME: 暂时写死
+	// FIXME 暂时写死
 	d.Access = "39.98.250.155:18106"
 	d.SetDeviceInfo()
 	return nil

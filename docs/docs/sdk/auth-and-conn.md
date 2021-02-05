@@ -30,19 +30,20 @@ topics     := topics.Override(topics.Topics{
 light := New(ProductKey, DeviceName, Version, Topics(topics))
 ```
 
-| 参数       |                  类型 | 描述       | 默认值        |
-| :--------- | --------------------: | :--------- | :------------ |
-| ProductKey |                string | 产品 Key。 | 必填          |
-| DeviceName |                string | 产品名称。 | 必填          |
-| Version    |                string | 设备版本。 | 必填          |
-| Protocol   |     protocol.Protocol | 协议类型。 | MQTT          |
-| Serializer | serializer.Serializer | 序列化器。 | TLV           |
-| Topics     |         topics.Topics | 主题列表。 | DefaultTopics |
-| Storage    |       storage.Storage | 配置存储。 | LocalStorage  |
+| 参数       |                  类型 | 描述       | 默认值                   |
+| :--------- | --------------------: | :--------- | :----------------------- |
+| ProductKey |                string | 产品 Key。 | 必填                     |
+| DeviceName |                string | 产品名称。 | 必填                     |
+| Version    |                string | 设备版本。 | 必填                     |
+| Protocol   |     protocol.Protocol | 协议类型。 | protocol.MQTT            |
+| Serializer | serializer.Serializer | 序列化器。 | serializer.TLV           |
+| Topics     |         topics.Topics | 主题列表。 | topics.DefaultTopics     |
+| Storage    |       storage.Storage | 配置存储。 | storage.LocalStorage     |
+| HTTPClient |           http.Client | 配置存储。 | httpclient.DefaultClient |
 
 ## 设备注册
 
-ProductKey、DeviceName、Version 是设备注册的三元组，通过这三个属性进行注册，如果这三项属性不正确，会注册失败。如果注册成功，会获取到 DeviceID 和 Secret，将它们挂在到 Device 实例上，并使用 Storage 进行存储。
+ProductKey、DeviceName、Version 是设备注册的三元组，通过这三个属性进行注册，如果这三项属性不正确，会注册失败。如果注册成功，会获取到 DeviceID 和 Secret，将它们挂载到 Device 实例上，并使用 Storage 进行存储。
 
 代码示例：
 
