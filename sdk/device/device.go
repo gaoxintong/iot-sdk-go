@@ -255,9 +255,7 @@ func (d *Device) Login() error {
 		return errors.Wrap(err, "device login failed, access convert to byte failed")
 	}
 	d.Token = hexToken
-	// d.Access = response.Data.AccessAddr
-	// FIXME 暂时写死
-	d.Access = "39.98.250.155:18106"
+	d.Access = response.Data.AccessAddr
 	d.SetDeviceInfo()
 	return nil
 }
