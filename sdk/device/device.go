@@ -455,7 +455,11 @@ func (d *Device) OnCommand(cmds ...Command) error {
 	}
 	callbackFn := func(resp request.Response) {
 		p := resp.Payload()
-		cmdPayload, _ := d.Serializer.UnmarshalCommand(p)
+		cmdPayload, err := d.Serializer.UnmarshalCommand(p)
+		if err != nil {
+			// TODO log
+			return
+		}
 		params := cmdPayload.Params
 		params[-1] = cmdPayload.SubDeviceID
 		if callback, ok := callbacks[cmdPayload.ID]; ok {
