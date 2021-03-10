@@ -36,10 +36,9 @@ type Data struct {
 }
 
 type SubDataHead struct {
-	SubDeviceid      uint16
-	PropertyNum      uint16
-	ParamsCount      uint16
-	ExternalDeviceId [8]byte // 扩展设备Id为兼容网关类设备
+	SubDeviceid uint16
+	PropertyNum uint16
+	ParamsCount uint16
 }
 
 type SubData struct {

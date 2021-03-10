@@ -29,6 +29,7 @@ var DefaultTopics = Topics{
 // Override 合并默认主题列表
 func Override(n Topics) Topics {
 	if err := mergo.Merge(&DefaultTopics, n, mergo.WithOverride); err != nil {
+		// TODO log
 		fmt.Println(err)
 	}
 	return DefaultTopics
