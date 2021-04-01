@@ -40,13 +40,28 @@ func (m *MQTT) MakeOpts(params map[string]interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "make mqtt options failed")
 	}
+	OnConnectionLost, ok := (params["OnConnectionLost"]).(func() map[string]interface{})
+	if !ok {
+		return nil, errors.Wrap(err, "make mqtt options failed")
+	}
 	opts := mqtt.NewClientOptions().AddBroker("tcp://" + Broker)
 	opts.SetClientID(ClientID)
 	opts.SetUsername(Username)
 	opts.SetPassword(Password)
 	opts.SetKeepAlive(KeepAlive)
+	opts.SetConnectionLostHandler(func(c *mqtt.Client, err error) {
+		newOpts := OnConnectionLost()
+		pswd, ok := (newOpts["Password"]).([]byte)
+		if ok {
+			c.RefreshPassword(string(pswd))
+		}
+	})
 	// opts.SetDefaultPublishHandler()
 	return opts, nil
+}
+
+func a() {
+
 }
 
 // NewClient 创建客户端
@@ -59,6 +74,7 @@ func (m *MQTT) NewClient(opts interface{}) error {
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
 		return errors.Wrap(token.Error(), "new mqtt client failed")
 	}
+
 	m.Client = c
 	return nil
 }

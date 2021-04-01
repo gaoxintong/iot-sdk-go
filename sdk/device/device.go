@@ -3,6 +3,7 @@ package device
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"iot-sdk-go/pkg/typeconv"
 	"iot-sdk-go/sdk/httpclient"
@@ -289,6 +290,14 @@ func (d *Device) initMQTTClient() error {
 		"Username":  IDStr,
 		"Password":  TokenStr,
 		"KeepAlive": 30 * time.Second,
+		// 断开后，执行 login，刷新 token，重连
+		"OnConnectionLost": func() map[string]interface{} {
+			fmt.Println("connection lost")
+			d.Login()
+			return map[string]interface{}{
+				"Password": d.Token,
+			}
+		},
 	}
 	newOpts, err := d.Protocol.MakeOpts(mqttOpts)
 	if err != nil {

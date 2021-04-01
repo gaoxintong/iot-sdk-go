@@ -73,6 +73,10 @@ type Client struct {
 	workers         sync.WaitGroup
 }
 
+func (c *Client) RefreshPassword(password string) {
+	c.options.Password = password
+}
+
 // NewClient will create an MQTT v3.1.1 client with all of the options specified
 // in the provided ClientOptions. The client must have the Start method called
 // on it before it may be used. This is to make sure resources (such as a net
