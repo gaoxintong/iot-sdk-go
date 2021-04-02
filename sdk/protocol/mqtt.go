@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"encoding/hex"
 	"iot-sdk-go/pkg/mqtt"
 	"iot-sdk-go/pkg/typeconv"
 	"iot-sdk-go/sdk/request"
@@ -53,7 +54,7 @@ func (m *MQTT) MakeOpts(params map[string]interface{}) (interface{}, error) {
 		newOpts := OnConnectionLost()
 		pswd, ok := (newOpts["Password"]).([]byte)
 		if ok {
-			c.RefreshPassword(string(pswd))
+			c.RefreshPassword(hex.EncodeToString(pswd))
 		}
 	})
 	// opts.SetDefaultPublishHandler()
